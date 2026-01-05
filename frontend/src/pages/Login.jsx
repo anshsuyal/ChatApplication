@@ -29,6 +29,7 @@ const Login = () => {
         { withCredentials: true }
       );
       dispatch(setUserData(result.data))
+      navigate("/")
       setEmail("");
       setPassword("");
       setLoading(false);

@@ -47,6 +47,7 @@ const Profile = () => {
       );
 
       dispatch(setUserData(result.data));
+      navigate("/");
     } catch (error) {
       console.error(error);
     } finally {
@@ -68,7 +69,8 @@ const Profile = () => {
       </button>
 
       {/* Glass Card */}
-      <div className="relative z-10 w-full max-w-[900px] rounded-3xl p-8 md:p-12
+      <div
+        className="relative z-10 w-full max-w-[900px] rounded-3xl p-8 md:p-12
         bg-white/50 backdrop-blur-xl border border-white/40 shadow-lg"
       >
         <h2 className="text-2xl font-semibold text-gray-800 mb-10">

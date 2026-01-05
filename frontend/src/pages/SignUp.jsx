@@ -33,6 +33,7 @@ const SignUp = () => {
       );
 
       dispatch(setUserData(result.data))
+      navigate("/profile")
 
       // ✅ clear form
       setUserName("");
