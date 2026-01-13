@@ -13,4 +13,4 @@ userRouter.get("/current", isAuth, getCurrentUser);
 userRouter.get("/others", isAuth, getOtherUsers);
 userRouter.put("/profile", isAuth, upload.single("image"), editProfile);
 
-export default userRouter;
+export default userRouter
