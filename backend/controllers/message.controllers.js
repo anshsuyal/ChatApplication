@@ -1,6 +1,6 @@
-import uploadOnCloudinary from "../config/cloudinary";
-import Conversation from "../models/conversation.model";
-import Message from "../models/message.model";
+import uploadOnCloudinary from "../config/cloudinary.js";
+import Conversation from "../models/conversation.model.js";
+import Message from "../models/message.model.js";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -47,3 +47,21 @@ export const sendMessage = async (req, res) => {
     });
   }
 };
+
+export const getMessages = async (req,res)=>{
+  try {
+    let sender = req.userId
+    let {receiver} = req.params
+    let conversation = await Conversation.findOne({
+      partcipants:{$all:[sender,receiver]}
+    }).populate("messages")
+    if(!conversation){
+      return res.status(400).json
+      ({message:"conversation not found"})
+    }
+
+    return res.status(200).json(conversation?.messages)
+  } catch (error) {
+    return res.status(500).json({message:`get send Message error ${error}`})
+  }
+}

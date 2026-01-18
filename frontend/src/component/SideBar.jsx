@@ -40,7 +40,7 @@ const SideBar = () => {
 
   return (
     <div
-      className={`w-full lg:w-[40%] h-full bg-slate-200 font-serif
+      className={`w-full lg:w-[40%] h-full bg-slate-100 font-serif
       ${selectedUser ? "hidden lg:block" : "block"}`}
     >
       {/* Logout Button */}

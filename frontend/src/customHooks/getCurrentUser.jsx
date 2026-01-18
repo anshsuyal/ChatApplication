@@ -1,8 +1,8 @@
 import axios from "axios";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { setUserData } from "../redux/userSlice";
-import { serverUrl } from "../main";
+import { setUserData } from "../redux/userSlice.js";
+import { serverUrl } from "../main.jsx";
 
 const useGetCurrentUser = () => {
   const dispatch = useDispatch();
@@ -12,18 +12,20 @@ const useGetCurrentUser = () => {
       try {
         const result = await axios.get(
           `${serverUrl}/api/user/current`,
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
+
         dispatch(setUserData(result.data));
       } catch (error) {
-        console.log("401 Unauthorized");
+        console.log(
+          "Get current user error:",
+          error.response?.data || error.message
+        );
       }
     };
 
     fetchUser();
-  }, []); 
+  }, [dispatch]); // ✅ dispatch added
 };
 
-export default useGetCurrentUser
+export default useGetCurrentUser;
