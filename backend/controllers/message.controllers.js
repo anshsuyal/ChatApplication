@@ -48,20 +48,26 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-export const getMessages = async (req,res)=>{
+export const getMessages = async (req, res) => {
   try {
-    let sender = req.userId
-    let {receiver} = req.params
-    let conversation = await Conversation.findOne({
-      partcipants:{$all:[sender,receiver]}
-    }).populate("messages")
-    if(!conversation){
-      return res.status(400).json
-      ({message:"conversation not found"})
+    const sender = req.userId;        // or req.user._id
+    const { receiver } = req.params;
+
+    const conversation = await Conversation.findOne({
+      participants: { $all: [sender, receiver] }, // ✅ FIXED SPELLING
+    }).populate("messages");
+
+    // ✅ FIX: return empty array instead of error
+    if (!conversation) {
+      return res.status(200).json([]);
     }
 
-    return res.status(200).json(conversation?.messages)
+    return res.status(200).json(conversation.messages);
   } catch (error) {
-    return res.status(500).json({message:`get send Message error ${error}`})
+    console.error("Get Messages Error:", error);
+    return res.status(500).json({
+      message: "Get messages failed",
+    });
   }
-}
+};
+
