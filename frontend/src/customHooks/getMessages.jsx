@@ -14,14 +14,14 @@ const useGetMessages = () => {
     const fetchMessages = async () => {
       try {
         const res = await axios.get(
-          `${serverUrl}/api/message/get/${selectedUser._id}`,
+          `${serverUrl}/api/message/send/${selectedUser._id}`,
           { withCredentials: true }
         );
 
         dispatch(setMessages(res.data));
       } catch (error) {
         console.error("Message Fetch Error:", error.message);
-        dispatch(setMessages([])); // ✅ safe fallback
+        dispatch(setMessages([]));
       }
     };
 

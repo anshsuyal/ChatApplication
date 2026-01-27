@@ -5,28 +5,25 @@ import Message from "../models/message.model.js";
 export const sendMessage = async (req, res) => {
   try {
     const sender = req.userId;
-    const { receiver } = req.params;
+    const {receiver} = req.params; 
     const { message } = req.body;
 
-    let image = null;
+    let image;
     if (req.file) {
       image = await uploadOnCloudinary(req.file.path);
     }
 
-    // ✅ find conversation
     let conversation = await Conversation.findOne({
       participants: { $all: [sender, receiver] },
     });
 
-    // ✅ create message
-    const newMessage = await Message.create({
+    let newMessage = await Message.create({
       sender,
       receiver,
       message,
-      image,
+      image
     });
 
-    // ✅ create or update conversation
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [sender, receiver],
@@ -40,33 +37,33 @@ export const sendMessage = async (req, res) => {
     return res.status(201).json(newMessage);
 
   } catch (error) {
-    console.error(error);
+    console.error("Send message error:", error);
     return res.status(500).json({
-      message: "Send message error",
-      error: error.message,
+      message: `Send message error" ${error}` 
     });
   }
 };
 
+
 export const getMessages = async (req, res) => {
   try {
-    const sender = req.userId;        // or req.user._id
-    const { receiver } = req.params;
+    let sender = req.userId;
+    let {receiver} = req.params;
 
-    const conversation = await Conversation.findOne({
+    let conversation = await Conversation.findOne({
       participants: { $all: [sender, receiver] }, // ✅ FIXED SPELLING
     }).populate("messages");
 
     // ✅ FIX: return empty array instead of error
     if (!conversation) {
-      return res.status(200).json([]);
+      return res.status(200).json({message:"conversation not found"});
     }
+    return res.status(200).json(conversation?.messages)
 
-    return res.status(200).json(conversation.messages);
+
   } catch (error) {
-    console.error("Get Messages Error:", error);
     return res.status(500).json({
-      message: "Get messages failed",
+      message :`get message error ${error}`
     });
   }
 };

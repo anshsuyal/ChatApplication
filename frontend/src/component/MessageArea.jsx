@@ -8,10 +8,9 @@ import { BsEmojiSmile } from "react-icons/bs";
 import { CiImageOn } from "react-icons/ci";
 import EmojiPicker from "emoji-picker-react";
 import axios from "axios";
-import { serverUrl } from "../main";
+import { serverUrl } from "../main.jsx";
 import { setMessages } from "../redux/messageSlice.js";
 
-// ✅ IMPORT THESE
 import SenderMessage from "../component/SenderMessage";
 import ReceiverMessage from "../component/ReceiverMessage";
 
@@ -41,13 +40,17 @@ const MessageArea = () => {
         { withCredentials: true }
       );
 
-      dispatch(setMessages([...messages, res.data]));
+      // ✅ FIX: always treat messages as array
+      dispatch(setMessages([...(messages || []), res.data]));
 
       setMessage("");
       setBackendImage(null);
       setFrontendImage(null);
     } catch (error) {
-      console.error("Send Message Error:", error.response?.data || error.message);
+      console.error(
+        "Send Message Error:",
+        error.response?.data || error.message
+      );
     }
   };
 
@@ -88,6 +91,7 @@ const MessageArea = () => {
           <img
             src={selectedUser.image || dp}
             className="w-full h-full object-cover"
+            alt="profile"
           />
         </div>
         <div>
@@ -96,23 +100,30 @@ const MessageArea = () => {
         </div>
       </div>
 
-      {/* ✅ MESSAGES (ONLY ONE MAP) */}
+      {/* ✅ MESSAGES */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages && messages.map((mess) =>
-          mess.sender === userData._id ? (
+        {messages.length === 0 && (
+          <p className="text-center text-gray-400">No messages yet</p>
+        )}
+
+        {messages.map((mess) => {
+          const isSender =
+            mess.sender?.toString() === userData?._id?.toString();
+
+          return isSender ? (
             <SenderMessage
               key={mess._id}
-              image={mess.image}
+              image={mess.image?.url || mess.image}
               message={mess.message}
             />
           ) : (
             <ReceiverMessage
               key={mess._id}
-              image={mess.image}
+              image={mess.image?.url || mess.image}
               message={mess.message}
             />
-          )
-        )}
+          );
+        })}
       </div>
 
       {/* IMAGE PREVIEW */}
@@ -121,6 +132,7 @@ const MessageArea = () => {
           <img
             src={frontendImage}
             className="max-w-[300px] max-h-[40vh] object-contain rounded-2xl border"
+            alt="preview"
           />
         </div>
       )}
