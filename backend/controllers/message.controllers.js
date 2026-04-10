@@ -1,20 +1,26 @@
 import uploadOnCloudinary from "../config/cloudinary.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+import { getReceiverSocketId } from "../socket/socket.js";
+import { io } from "../socket/socket.js";
 
 export const sendMessage = async (req, res) => {
   try {
     const sender = req.userId;
-    const {receiver} = req.params; 
+    const receiver = req.params.receiver;
     const { message } = req.body;
 
-    let image;
+    if (!sender || !receiver) {
+      return res.status(400).json({ message: "Missing sender/receiver" });
+    }
+
+    let image = "";
     if (req.file) {
       image = await uploadOnCloudinary(req.file.path);
     }
 
     let conversation = await Conversation.findOne({
-      participants: { $all: [sender, receiver] },
+      participants: { $all: [sender, receiver] }
     });
 
     let newMessage = await Message.create({
@@ -30,8 +36,15 @@ export const sendMessage = async (req, res) => {
         messages: [newMessage._id],
       });
     } else {
+      if (!Array.isArray(conversation.messages)) conversation.messages = [];
       conversation.messages.push(newMessage._id);
       await conversation.save();
+    }
+
+    const receiverSocketId = getReceiverSocketId(receiver)
+
+    if(receiverSocketId){
+      io.to(receiverSocketId).emit("newMessage", newMessage)
     }
 
     return res.status(201).json(newMessage);
@@ -39,7 +52,7 @@ export const sendMessage = async (req, res) => {
   } catch (error) {
     console.error("Send message error:", error);
     return res.status(500).json({
-      message: `Send message error" ${error}` 
+      message: `Send message error: ${error.message}` 
     });
   }
 };
@@ -47,24 +60,27 @@ export const sendMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
-    let sender = req.userId;
-    let {receiver} = req.params;
+    const sender = req.userId;
+    const receiver = req.params.receiver;
 
-    let conversation = await Conversation.findOne({
-      participants: { $all: [sender, receiver] }, // ✅ FIXED SPELLING
+    if (!sender || !receiver) {
+      return res.status(400).json({ message: "Missing IDs" });
+    }
+
+    const conversation = await Conversation.findOne({
+      participants: { $all: [sender, receiver] },
     }).populate("messages");
 
-    // ✅ FIX: return empty array instead of error
     if (!conversation) {
-      return res.status(200).json({message:"conversation not found"});
+      return res.status(200).json([]); // ✅ important
     }
-    return res.status(200).json(conversation?.messages)
 
+    return res.status(200).json(conversation.messages);
 
   } catch (error) {
+    console.error("Get message error:", error);
     return res.status(500).json({
-      message :`get message error ${error}`
+      message: error.message
     });
   }
 };
-

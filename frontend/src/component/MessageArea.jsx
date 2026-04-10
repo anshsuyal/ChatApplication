@@ -1,180 +1,312 @@
-import React, { useState } from "react";
-import { IoArrowBackCircleSharp, IoSend } from "react-icons/io5";
-import { useDispatch, useSelector } from "react-redux";
-import dp from "../assets/dp.jpg";
-import men from "../assets/3d.png";
-import { setSelectedUser } from "../redux/userSlice.js";
-import { BsEmojiSmile } from "react-icons/bs";
-import { CiImageOn } from "react-icons/ci";
-import EmojiPicker from "emoji-picker-react";
-import axios from "axios";
-import { serverUrl } from "../main.jsx";
-import { setMessages } from "../redux/messageSlice.js";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
+import EmojiPicker from 'emoji-picker-react';
 
-import SenderMessage from "../component/SenderMessage";
-import ReceiverMessage from "../component/ReceiverMessage";
+// Icons (Adjust these imports based on the exact react-icons you chose)
+import { IoMdArrowBack } from "react-icons/io";
+import { BsEmojiSmile } from "react-icons/bs";
+import { FaImage } from "react-icons/fa6";
+import { IoSend } from "react-icons/io5";
+
+import { setSelectedUser } from '../redux/userSlice';
+import { setMessages } from '../redux/messageSlice'; // Assuming you exported this from messageSlice
+import { serverUrl } from '../main';
+import SenderMessage from './SenderMessage';
+import ReceiverMessage from './ReceiverMessage';
+import dp from '../assets/3d.png';
+
+const getId = (val) => {
+    if (!val) return null;
+    if (typeof val === "string") return val;
+    if (typeof val === "object" && typeof val._id === "string") return val._id;
+    return null;
+};
+
+const getMessageKey = (msg) => {
+    const id = getId(msg?._id);
+    if (id) return `id:${id}`;
+    const sender = getId(msg?.sender) ?? "";
+    const receiver = getId(msg?.receiver) ?? "";
+    const createdAt = msg?.createdAt ?? msg?.updatedAt ?? "";
+    const text = msg?.message ?? "";
+    const image = msg?.image ?? "";
+    return `c:${sender}|${receiver}|${createdAt}|${text}|${image}`;
+};
+
+const appendUnique = (prev, incoming) => {
+    const key = getMessageKey(incoming);
+    if (!key) return prev;
+    if (prev.some((m) => getMessageKey(m) === key)) return prev;
+    return [...prev, incoming];
+};
 
 const MessageArea = () => {
-  const dispatch = useDispatch();
-  const { selectedUser, userData } = useSelector((state) => state.user);
-  const { messages } = useSelector((state) => state.message);
+    const dispatch = useDispatch();
+    
+    // Redux States
+    const { userData, selectedUser, socket, onlineUsers } = useSelector((state) => state.user);
+    const messages = useSelector((state) => state.message.messages) || [];
+    const myUserId = useMemo(() => getId(userData), [userData]);
+    const selectedUserId = useMemo(() => getId(selectedUser), [selectedUser]);
+    const isSelectedUserOnline = useMemo(() => {
+        if (!selectedUserId) return false;
+        return Array.isArray(onlineUsers) && onlineUsers.includes(selectedUserId);
+    }, [onlineUsers, selectedUserId]);
 
-  const [showPicker, setShowPicker] = useState(false);
-  const [message, setMessage] = useState("");
-  const [backendImage, setBackendImage] = useState(null);
-  const [frontendImage, setFrontendImage] = useState(null);
+    // Local States
+    const [input, setInput] = useState("");
+    const [showPicker, setShowPicker] = useState(false);
+    const [frontEndImage, setFrontEndImage] = useState(null); // For preview
+    const [backEndImage, setBackEndImage] = useState(null);   // For sending to backend
+    const [isTyping, setIsTyping] = useState(false);
+    
+    const imageRef = useRef();
+    const typingTimeoutRef = useRef(null);
 
-  // ✅ SEND MESSAGE
-  const handleSendMessage = async () => {
-    if (!message && !backendImage) return;
-    if (!selectedUser?._id) return;
+    // ---------------------------------------------------------
+    // IMAGE PREVIEW URL CLEANUP
+    // ---------------------------------------------------------
+    useEffect(() => {
+        // When using URL.createObjectURL, we must revoke it to avoid memory leaks.
+        return () => {
+            if (frontEndImage?.startsWith("blob:")) {
+                URL.revokeObjectURL(frontEndImage);
+            }
+        };
+    }, [frontEndImage]);
 
-    try {
-      const formData = new FormData();
-      formData.append("message", message || "");
-      if (backendImage) formData.append("image", backendImage);
+    // ---------------------------------------------------------
+    // TYPING INDICATOR (REAL-TIME)
+    // ---------------------------------------------------------
+    useEffect(() => {
+        if (!socket || !selectedUserId) return;
 
-      const res = await axios.post(
-        `${serverUrl}/api/message/send/${selectedUser._id}`,
-        formData,
-        { withCredentials: true }
-      );
+        const onTyping = ({ from }) => {
+            if (from === selectedUserId) setIsTyping(true);
+        };
+        const onStopTyping = ({ from }) => {
+            if (from === selectedUserId) setIsTyping(false);
+        };
 
-      // ✅ FIX: always treat messages as array
-      dispatch(setMessages([...(messages || []), res.data]));
+        socket.off("typing", onTyping);
+        socket.off("stopTyping", onStopTyping);
+        socket.on("typing", onTyping);
+        socket.on("stopTyping", onStopTyping);
 
-      setMessage("");
-      setBackendImage(null);
-      setFrontendImage(null);
-    } catch (error) {
-      console.error(
-        "Send Message Error:",
-        error.response?.data || error.message
-      );
+        return () => {
+            socket.off("typing", onTyping);
+            socket.off("stopTyping", onStopTyping);
+        };
+    }, [socket, selectedUserId]);
+
+    // ---------------------------------------------------------
+    // HANDLERS
+    // ---------------------------------------------------------
+    const handleImage = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBackEndImage(file);
+            const url = URL.createObjectURL(file);
+            setFrontEndImage(url);
+        }
+    };
+
+    const onEmojiClick = (emojiData) => {
+        setInput((prev) => prev + emojiData.emoji);
+        setShowPicker(false);
+    };
+
+    const emitTyping = (value) => {
+        if (!socket || !selectedUserId) return;
+
+        // If there is content, user is typing; otherwise stop.
+        if (value.trim().length > 0) {
+            socket.emit("typing", { to: selectedUserId });
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                socket.emit("stopTyping", { to: selectedUserId });
+            }, 900);
+        } else {
+            socket.emit("stopTyping", { to: selectedUserId });
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        }
+    };
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+
+        // Prevent sending empty messages
+        if (input.trim().length === 0 && !backEndImage) return;
+        if (!selectedUserId) return;
+
+        try {
+            // Stop typing immediately on send
+            if (socket && selectedUserId) socket.emit("stopTyping", { to: selectedUserId });
+            const formData = new FormData();
+            formData.append("message", input);
+            if (backEndImage) {
+                formData.append("image", backEndImage);
+            }
+
+            const result = await axios.post(
+                `${serverUrl}/api/message/send/${selectedUserId}`,
+                formData,
+                { withCredentials: true }
+            );
+
+            // Update Redux state with the newly sent message
+            const next = appendUnique(messages || [], result.data);
+            dispatch(setMessages(next));
+
+            // Clear inputs after sending
+            setInput("");
+            if (frontEndImage?.startsWith("blob:")) URL.revokeObjectURL(frontEndImage);
+            setFrontEndImage(null);
+            setBackEndImage(null);
+
+        } catch (error) {
+            console.log("Send Message Error:", error);
+        }
+    };
+
+    // ---------------------------------------------------------
+    // CONDITIONAL RENDERING (WELCOME SCREEN)
+    // ---------------------------------------------------------
+    if (!selectedUser) {
+        return (
+            <div className="hidden lg:flex w-[70%] h-full bg-slate-300 flex-col items-center justify-center">
+                <h1 className="text-5xl font-bold text-gray-700">Welcome to Chatly</h1>
+                <span className="text-3xl font-semibold text-gray-700 mt-2">Chat Friendly!</span>
+            </div>
+        );
     }
-  };
 
-  // ✅ IMAGE HANDLER
-  const handleImage = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setBackendImage(file);
-    setFrontendImage(URL.createObjectURL(file));
-  };
-
-  // ✅ EMOJI HANDLER
-  const handleEmojiClick = (emojiData) => {
-    setMessage((prev) => prev + emojiData.emoji);
-    setShowPicker(false);
-  };
-
-  // ✅ EMPTY STATE
-  if (!selectedUser) {
+    // ---------------------------------------------------------
+    // MAIN CHAT AREA
+    // ---------------------------------------------------------
     return (
-      <div className="hidden lg:flex w-[70%] h-full flex-col justify-center items-center text-gray-600">
-        <img src={men} alt="welcome" className="w-[300px] h-[300px]" />
-        <h1 className="font-bold text-[40px]">Welcome to SayHi</h1>
-        <span>Select a user to start chatting 💬</span>
-      </div>
+        <div className="flex w-full lg:w-[70%] h-full bg-slate-300 flex-col relative">
+            
+            {/* Header */}
+            <div className="flex items-center gap-5 w-full h-[100px] bg-slate-400 px-5 shadow-md">
+                <IoMdArrowBack 
+                    className="text-4xl text-white cursor-pointer" 
+                    onClick={() => dispatch(setSelectedUser(null))} 
+                />
+                <img 
+                    src={selectedUser.image || dp} 
+                    alt="profile" 
+                    className="w-[50px] h-[50px] rounded-full object-cover shadow-md"
+                />
+                <div className="flex flex-col">
+                    <h1 className="text-2xl font-semibold text-white leading-tight">
+                        {selectedUser.name || "User"}
+                    </h1>
+                    <span className="text-sm text-white/90">
+                        {isTyping ? "typing..." : isSelectedUserOnline ? "Online" : "Offline"}
+                    </span>
+                </div>
+            </div>
+
+            {/* Messages Display Area */}
+            <div className="flex-1 w-full overflow-y-auto flex flex-col gap-3 px-5 py-[20px] pb-[80px]">
+                {Array.isArray(messages) && messages.map((msg) => {
+                    const key = getMessageKey(msg);
+                    // Check if the current logged-in user is the sender
+                    const senderId = getId(msg?.sender);
+                    if (senderId && myUserId && senderId === myUserId) {
+                        return (
+                            <SenderMessage 
+                                key={key} 
+                                message={msg?.message} 
+                                image={msg?.image} 
+                            />
+                        );
+                    } else {
+                        return (
+                            <ReceiverMessage 
+                                key={key} 
+                                message={msg?.message} 
+                                image={msg?.image} 
+                            />
+                        );
+                    }
+                })}
+            </div>
+
+            {/* Image Preview Window (Appears above input when an image is selected) */}
+            {frontEndImage && (
+                <div className="absolute bottom-[100px] right-[20%] z-50">
+                    <img 
+                        src={frontEndImage} 
+                        alt="preview" 
+                        className="w-[150px] rounded-lg shadow-lg"
+                    />
+                </div>
+            )}
+
+            {/* Emoji Picker */}
+            {showPicker && (
+                <div className="absolute bottom-[120px] left-[20px] z-[100] shadow-lg">
+                    <EmojiPicker 
+                        onEmojiClick={onEmojiClick} 
+                        width={250} 
+                        height={350} 
+                    />
+                </div>
+            )}
+
+            {/* Input Form */}
+            <div className="absolute bottom-5 w-full flex justify-center px-5">
+                <form 
+                    onSubmit={handleSendMessage} 
+                    className="flex items-center gap-3 w-full lg:w-[90%] max-w-[800px] bg-slate-200 h-[60px] px-5 rounded-full shadow-lg"
+                >
+                    {/* Emoji Trigger */}
+                    <div onClick={() => setShowPicker((prev) => !prev)}>
+                        <BsEmojiSmile className="text-2xl text-gray-600 cursor-pointer" />
+                    </div>
+
+                    {/* Image Upload Trigger */}
+                    <div onClick={() => imageRef.current.click()}>
+                        <FaImage className="text-2xl text-gray-600 cursor-pointer" />
+                    </div>
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        ref={imageRef} 
+                        onChange={handleImage} 
+                    />
+
+                    {/* Text Input */}
+                    <input 
+                        type="text" 
+                        placeholder="Message" 
+                        value={input} 
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setInput(val);
+                            emitTyping(val);
+                        }} 
+                        onBlur={() => {
+                            if (socket && selectedUserId) socket.emit("stopTyping", { to: selectedUserId });
+                            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                        }}
+                        className="w-full h-full bg-transparent outline-none text-lg px-2 text-gray-800 placeholder-gray-500"
+                    />
+
+                    {/* Send Button (Only shows if there's text or an image) */}
+                    {(input.trim().length > 0 || backEndImage) && (
+                        <button type="submit" className="ml-2">
+                            <IoSend className="text-2xl text-blue-500 cursor-pointer" />
+                        </button>
+                    )}
+                </form>
+            </div>
+        </div>
     );
-  }
-
-  return (
-    <div className="w-full lg:w-[70%] h-screen bg-slate-100 flex flex-col">
-      {/* HEADER */}
-      <div className="w-full h-[70px] bg-[#20c7ff] flex items-center gap-3 px-4 shadow">
-        <IoArrowBackCircleSharp
-          onClick={() => dispatch(setSelectedUser(null))}
-          className="w-9 h-9 text-white cursor-pointer lg:hidden"
-        />
-        <div className="w-11 h-11 rounded-full overflow-hidden bg-white">
-          <img
-            src={selectedUser.image || dp}
-            className="w-full h-full object-cover"
-            alt="profile"
-          />
-        </div>
-        <div>
-          <h2 className="text-white font-semibold">{selectedUser.name}</h2>
-          <p className="text-xs text-white/80">Online</p>
-        </div>
-      </div>
-
-      {/* ✅ MESSAGES */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages.length === 0 && (
-          <p className="text-center text-gray-400">No messages yet</p>
-        )}
-
-        {messages.map((mess) => {
-          const isSender =
-            mess.sender?.toString() === userData?._id?.toString();
-
-          return isSender ? (
-            <SenderMessage
-              key={mess._id}
-              image={mess.image?.url || mess.image}
-              message={mess.message}
-            />
-          ) : (
-            <ReceiverMessage
-              key={mess._id}
-              image={mess.image?.url || mess.image}
-              message={mess.message}
-            />
-          );
-        })}
-      </div>
-
-      {/* IMAGE PREVIEW */}
-      {frontendImage && (
-        <div className="flex justify-end px-3 pb-2">
-          <img
-            src={frontendImage}
-            className="max-w-[300px] max-h-[40vh] object-contain rounded-2xl border"
-            alt="preview"
-          />
-        </div>
-      )}
-
-      {/* INPUT */}
-      <div className="w-full h-[65px] bg-white flex items-center gap-3 px-4 shadow-inner relative">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => {
-            setMessage(e.target.value);
-            setShowPicker(false);
-          }}
-          placeholder="Type a message..."
-          className="flex-1 h-10 px-4 rounded-full border outline-none"
-        />
-
-        <BsEmojiSmile
-          onClick={() => setShowPicker(!showPicker)}
-          className="text-xl cursor-pointer text-gray-600"
-        />
-
-        {showPicker && (
-          <div className="absolute bottom-16 right-10 z-50">
-            <EmojiPicker onEmojiClick={handleEmojiClick} />
-          </div>
-        )}
-
-        <label>
-          <CiImageOn className="text-xl cursor-pointer text-gray-600" />
-          <input type="file" hidden accept="image/*" onChange={handleImage} />
-        </label>
-
-        <button
-          onClick={handleSendMessage}
-          className="w-10 h-10 rounded-full bg-[#20c7ff] flex items-center justify-center text-white"
-        >
-          <IoSend />
-        </button>
-      </div>
-    </div>
-  );
 };
 
 export default MessageArea;

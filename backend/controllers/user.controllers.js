@@ -44,16 +44,20 @@ export const editProfile = async (req, res) => {
 };
 
 export const getOtherUsers = async (req, res) => {
-  try {
-    const users = await User.find({
-      _id: { $ne: req.userId },
-    }).select("-password");
+    try {
+        // req.userId comes from your isAuth middleware
+        const loggedInUserId = req.userId; 
 
-    return res.status(200).json(users);
-  } catch (error) {
-    console.error("getOtherUsers error:", error);
-    return res.status(500).json({
-      message: `get other users error: ${error.message}`,
-    });
-  }
+        // Find all users WHERE _id is NOT EQUAL ($ne) to the logged-in user's ID
+        // .select("-password") ensures we don't send passwords to the frontend
+        const otherUsers = await User.find({
+            _id: { $ne: loggedInUserId }
+        }).select("-password");
+
+        return res.status(200).json(otherUsers);
+
+    } catch (error) {
+        console.log("Get Other Users Error:", error);
+        return res.status(500).json({ message: "Internal server error", error: error.message });
+    }
 };

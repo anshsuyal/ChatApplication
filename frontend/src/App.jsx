@@ -1,49 +1,90 @@
-import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import io from 'socket.io-client';
 
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import Profile from "./pages/Profile";
-import Home from "./pages/Home";
+// Components & Pages
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Profile from './pages/Profile';
 
-import useGetCurrentUser from "./customHooks/getCurrentUser";
-import useGetOtherUsers from "./customHooks/getOtherUser";
+// Custom Hooks
+import GetCurrentUser from "./customHooks/getCurrentUser";
+import GetOtherUsers from "./customHooks/getOtherUser";
+
+// Redux Actions
+import { setSocket, setOnlineUsers } from './redux/userSlice';
+import { serverUrl } from './main';
 
 const App = () => {
-  // Always try to restore logged-in user
-  useGetCurrentUser();
+    const dispatch = useDispatch();
+    const { userData, authChecked } = useSelector((state) => state.user); // Removed socket from here
 
-  const { userData } = useSelector((state) => state.user);
+    // Socket.io Setup
+    useEffect(() => {
+        if (userData) {
+            // Initialize Socket connection
+            const socketio = io(serverUrl, {
+                query: {
+                    userId: userData._id,
+                },
+            });
 
-  // Safe: hook internally checks for userData
-  useGetOtherUsers();
+            // Store the socket instance in Redux
+            dispatch(setSocket(socketio));
 
-  return (
-    <Routes>
-      {/* Public routes */}
-      <Route
-        path="/login"
-        element={!userData ? <Login /> : <Navigate to="/" />}
-      />
+            // Listen for online users from the backend
+            const onOnlineUsers = (onlineUsers) => {
+                dispatch(setOnlineUsers(onlineUsers));
+            };
+            socketio.on('getOnlineUsers', onOnlineUsers);
 
-      <Route
-        path="/signup"
-        element={!userData ? <SignUp /> : <Navigate to="/" />}
-      />
+            // Cleanup function: This automatically runs when the component unmounts 
+            // OR when userData changes (e.g., user logs out).
+            return () => {
+                socketio.off('getOnlineUsers', onOnlineUsers);
+                socketio.close();
+                dispatch(setSocket(null));
+            };
+        }
+    }, [userData, dispatch]); // ✅ FIXED: socket is no longer in this array
 
-      {/* Protected routes */}
-      <Route
-        path="/"
-        element={userData ? <Home /> : <Navigate to="/login" />}
-      />
+    return (
+        <>
+            {/* Bootstrap data safely */}
+            <GetCurrentUser />
+            <GetOtherUsers />
 
-      <Route
-        path="/profile"
-        element={userData ? <Profile /> : <Navigate to="/login" />}
-      />
-    </Routes>
-  );
+            {!authChecked ? (
+                <div className="w-full h-[100vh] flex items-center justify-center bg-slate-100">
+                    <div className="text-gray-700 text-lg font-semibold">Loading...</div>
+                </div>
+            ) : (
+                <Routes>
+                    {/* Protected Routes */}
+                    <Route 
+                        path="/" 
+                        element={userData ? <Home /> : <Navigate to="/login" />} 
+                    />
+                    <Route 
+                        path="/profile" 
+                        element={userData ? <Profile /> : <Navigate to="/login" />} 
+                    />
+
+                    {/* Public Routes */}
+                    <Route 
+                        path="/login" 
+                        element={!userData ? <Login /> : <Navigate to="/" />} 
+                    />
+                    <Route 
+                        path="/signup" 
+                        element={!userData ? <Signup /> : <Navigate to="/" />} 
+                    />
+                </Routes>
+            )}
+        </>
+    );
 };
 
 export default App;

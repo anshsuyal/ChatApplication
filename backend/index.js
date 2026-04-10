@@ -6,16 +6,18 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import userRouter from "./routes/user.routes.js";
 import messageRouter from "./routes/message.routes.js";
+import { app, server } from "./socket/socket.js";
 
 dotenv.config();
 
-const port = process.env.PORT || 5000;
-
-const app = express();
+// ✅ UPDATED: Changed the fallback port to 8001 to avoid the 8000 clash
+const port = process.env.PORT || 8001;
 
 // Middleware
 app.use(cors({
-    origin: "http://localhost:5173",
+    // Make sure this matches your FRONTEND URL. 
+    // If your frontend runs on Vite, it might be http://localhost:5173
+    origin: "http://localhost:8000", 
     credentials: true
 }));
 app.use(express.json());
@@ -23,11 +25,11 @@ app.use(cookieParser()); // ✅ FIXED
 
 // Routes
 app.use("/api/auth", authRouter);
-app.use("/api/user",userRouter);
-app.use("/api/message",messageRouter);
+app.use("/api/user", userRouter);
+app.use("/api/message", messageRouter);
 
 // Server
-app.listen(port, async () => {
+server.listen(port, async () => {
     await connectDb();
     console.log(`Server started on port ${port}`);
 });

@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { serverUrl } from "../main";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 
 const SignUp = () => {
@@ -22,6 +22,7 @@ const SignUp = () => {
     // ✅ frontend validation
     if (!userName || !email || !password) {
       alert("All fields are required");
+      setLoading(false);
       return;
     }
 
@@ -41,14 +42,11 @@ const SignUp = () => {
       setPassword("");
       setLoading(false);
       setErr("");
-
-      // ✅ redirect
-      navigate("/login");
     } catch (error) {
       // ✅ show real backend error
       console.log(error.response?.data || error.message);
       setLoading(false);
-      setErr(error?.response?.data?.message);
+      setErr(error?.response?.data?.message || error.message);
     }
   };
 

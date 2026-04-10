@@ -1,36 +1,59 @@
-import React from "react";
+import React, { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import dp from '../assets/dp.jpg'; // Adjust path if your default image is located elsewhere
 
-const ReceiverMessage = ({ image, message, time }) => {
-  return (
-    <div className="flex justify-start mb-2 px-2">
-      <div
-        className="bg-white text-gray-800 px-3 py-2 rounded-2xl shadow 
-                   max-w-[85%] sm:max-w-[70%] lg:max-w-[60%] 
-                   flex flex-col gap-2"
-      >
-        {/* IMAGE */}
-        {image && (
-          <img
-            src={image}
-            alt="received"
-            className="w-full max-h-[40vh] object-contain rounded-xl"
-          />
-        )}
+const ReceiverMessage = ({ message, image }) => {
+    // Fetch selectedUser from Redux to display the receiver's profile picture
+    const { selectedUser } = useSelector((state) => state.user);
+    const scroll = useRef();
 
-        {/* MESSAGE */}
-        {message && (
-          <p className="text-sm leading-relaxed break-words">
-            {message}
-          </p>
-        )}
+    // Auto-scroll to this message when it mounts/updates
+    useEffect(() => {
+        scroll.current?.scrollIntoView({ behavior: "smooth" });
+    }, [message, image]);
 
-        {/* TIME */}
-        <span className="text-[10px] text-gray-400 text-left">
-          {time || "10:30 AM"}
-        </span>
-      </div>
-    </div>
-  );
+    // Handle scroll specifically for when an attached image finishes loading
+    const handleImageScroll = () => {
+        scroll.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    return (
+        <div ref={scroll} className="flex justify-start w-full mt-2">
+            <div className="flex gap-2 max-w-[80%] sm:max-w-[600px] items-start">
+                
+                {/* Receiver Profile Picture (Moved to the LEFT) */}
+                <div className="w-[40px] h-[40px] shrink-0 mt-1">
+                    <img 
+                        src={selectedUser?.image || dp} 
+                        alt="receiver profile" 
+                        className="w-full h-full rounded-full object-cover shadow-sm border border-gray-300"
+                    />
+                </div>
+
+                {/* Message Content Bubble */}
+                <div className="flex flex-col items-start gap-2">
+                    
+                    {/* If an image attachment exists */}
+                    {image && (
+                        <img 
+                            src={image.secure_url || image} 
+                            alt="attachment" 
+                            className="w-[150px] sm:w-[200px] rounded-lg shadow-md object-cover"
+                            onLoad={handleImageScroll} // Crucial for scrolling after image load
+                        />
+                    )}
+                    
+                    {/* If a text message exists */}
+                    {message && (
+                        <div className="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-tl-none shadow-md w-fit">
+                            <span className="text-md break-words">{message}</span>
+                        </div>
+                    )}
+                </div>
+                
+            </div>
+        </div>
+    );
 };
 
-export default ReceiverMessage
+export default ReceiverMessage;

@@ -13,7 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const SideBar = () => {
-  const { userData, otherUsers, selectedUser } = useSelector(
+  const { userData, otherUsers, selectedUser, onlineUsers } = useSelector(
     (state) => state.user
   );
 
@@ -31,7 +31,8 @@ const SideBar = () => {
       });
 
       dispatch(setUserData(null));
-      dispatch(setOtherUsers(null));
+      dispatch(setOtherUsers([]));
+      dispatch(setSelectedUser(null));
       navigate("/login");
     } catch (error) {
       console.log(error);
@@ -102,24 +103,31 @@ const SideBar = () => {
 
       {/* User List */}
       <div className="w-full h-[60vh] overflow-auto flex flex-col gap-[20px] items-center mt-[20px]">
-        {otherUsers?.map((user) => (
+        {otherUsers?.map((user) => {
+          const isOnline = Array.isArray(onlineUsers) && onlineUsers.includes(user._id);
+          return (
           <div
             key={user._id}
             onClick={() => dispatch(setSelectedUser(user))}
             className="w-[95%] h-[50px] flex items-center gap-[20px] bg-white shadow-lg rounded-full hover:bg-slate-100 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg ml-[5px]">
+            <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg ml-[5px] relative">
               <img
                 src={user.image || dp}
                 alt="profile"
                 className="w-full h-full object-cover"
+              />
+              <span
+                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                  isOnline ? "bg-green-500" : "bg-gray-300"
+                }`}
               />
             </div>
             <h1 className="text-gray-800 font-semibold text-[18px]">
               {user.name || user.userName}
             </h1>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );
