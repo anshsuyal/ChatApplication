@@ -15,6 +15,7 @@ import { serverUrl } from '../main';
 import SenderMessage from './SenderMessage';
 import ReceiverMessage from './ReceiverMessage';
 import dp from '../assets/3d.png';
+import { useTheme } from '../context/ThemeContext';
 
 const getId = (val) => {
     if (!val) return null;
@@ -43,6 +44,7 @@ const appendUnique = (prev, incoming) => {
 
 const MessageArea = () => {
     const dispatch = useDispatch();
+    const { theme } = useTheme();
     
     // Redux States
     const { userData, selectedUser, socket, onlineUsers } = useSelector((state) => state.user);
@@ -175,9 +177,9 @@ const MessageArea = () => {
     // ---------------------------------------------------------
     if (!selectedUser) {
         return (
-            <div className="hidden lg:flex w-[70%] h-full bg-slate-300 flex-col items-center justify-center">
-                <h1 className="text-5xl font-bold text-gray-700">Welcome to Chatly</h1>
-                <span className="text-3xl font-semibold text-gray-700 mt-2">Chat Friendly!</span>
+            <div className="hidden lg:flex w-[70%] h-full bg-slate-300 dark:bg-gray-800 flex-col items-center justify-center transition-colors duration-300">
+                <h1 className="text-5xl font-bold text-gray-700 dark:text-gray-200">Welcome to Chatly</h1>
+                <span className="text-3xl font-semibold text-gray-700 dark:text-gray-300 mt-2">Chat Friendly!</span>
             </div>
         );
     }
@@ -186,10 +188,10 @@ const MessageArea = () => {
     // MAIN CHAT AREA
     // ---------------------------------------------------------
     return (
-        <div className="flex w-full lg:w-[70%] h-full bg-slate-300 flex-col relative">
+        <div className="flex w-full lg:w-[70%] h-full bg-slate-300 dark:bg-gray-800 flex-col relative transition-colors duration-300">
             
             {/* Header */}
-            <div className="flex items-center gap-5 w-full h-[100px] bg-slate-400 px-5 shadow-md">
+            <div className="flex items-center gap-5 w-full h-[100px] bg-slate-400 dark:bg-slate-700 px-5 shadow-md transition-colors duration-300">
                 <IoMdArrowBack 
                     className="text-4xl text-white cursor-pointer" 
                     onClick={() => dispatch(setSelectedUser(null))} 
@@ -219,6 +221,7 @@ const MessageArea = () => {
                         return (
                             <SenderMessage 
                                 key={key} 
+                                id={msg?._id}
                                 message={msg?.message} 
                                 image={msg?.image} 
                             />
@@ -253,6 +256,7 @@ const MessageArea = () => {
                         onEmojiClick={onEmojiClick} 
                         width={250} 
                         height={350} 
+                        theme={theme === 'dark' ? 'dark' : 'light'}
                     />
                 </div>
             )}
@@ -261,16 +265,16 @@ const MessageArea = () => {
             <div className="absolute bottom-5 w-full flex justify-center px-5">
                 <form 
                     onSubmit={handleSendMessage} 
-                    className="flex items-center gap-3 w-full lg:w-[90%] max-w-[800px] bg-slate-200 h-[60px] px-5 rounded-full shadow-lg"
+                    className="flex items-center gap-3 w-full lg:w-[90%] max-w-[800px] bg-slate-200 dark:bg-gray-700 h-[60px] px-5 rounded-full shadow-lg transition-colors duration-300"
                 >
                     {/* Emoji Trigger */}
                     <div onClick={() => setShowPicker((prev) => !prev)}>
-                        <BsEmojiSmile className="text-2xl text-gray-600 cursor-pointer" />
+                        <BsEmojiSmile className="text-2xl text-gray-600 dark:text-gray-300 cursor-pointer" />
                     </div>
 
                     {/* Image Upload Trigger */}
                     <div onClick={() => imageRef.current.click()}>
-                        <FaImage className="text-2xl text-gray-600 cursor-pointer" />
+                        <FaImage className="text-2xl text-gray-600 dark:text-gray-300 cursor-pointer" />
                     </div>
                     <input 
                         type="file" 
@@ -294,7 +298,7 @@ const MessageArea = () => {
                             if (socket && selectedUserId) socket.emit("stopTyping", { to: selectedUserId });
                             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
                         }}
-                        className="w-full h-full bg-transparent outline-none text-lg px-2 text-gray-800 placeholder-gray-500"
+                        className="w-full h-full bg-transparent outline-none text-lg px-2 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
                     />
 
                     {/* Send Button (Only shows if there's text or an image) */}

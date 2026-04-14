@@ -102,11 +102,24 @@ export default function GetMessages() {
       }
     };
 
+    const onMessageDeleted = (deletedId) => {
+      if (!deletedId) return;
+      const filtered = messagesRef.current.filter((m) => getId(m?._id) !== deletedId);
+      if (filtered.length !== messagesRef.current.length) {
+        messagesRef.current = filtered;
+        dispatch(setMessages(filtered));
+      }
+    };
+
     socket.off("newMessage", onNewMessage);
     socket.on("newMessage", onNewMessage);
+    
+    socket.off("messageDeleted", onMessageDeleted);
+    socket.on("messageDeleted", onMessageDeleted);
 
     return () => {
       socket.off("newMessage", onNewMessage);
+      socket.off("messageDeleted", onMessageDeleted);
     };
   }, [socket, selectedUserId, myUserId, dispatch]);
 

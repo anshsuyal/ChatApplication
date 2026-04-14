@@ -84,3 +84,45 @@ export const getMessages = async (req, res) => {
     });
   }
 };
+
+export const deleteMessage = async (req, res) => {
+  try {
+    const sender = req.userId;
+    const messageId = req.params.id;
+
+    if (!sender || !messageId) {
+      return res.status(400).json({ message: "Missing IDs" });
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Ensure only the sender can delete their message
+    if (message.sender.toString() !== sender.toString()) {
+      return res.status(403).json({ message: "Not authorized to delete this message" });
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    // Optional: Also remove the message reference from the Conversation
+    await Conversation.updateMany(
+      { messages: messageId },
+      { $pull: { messages: messageId } }
+    );
+
+    const receiverSocketId = getReceiverSocketId(message.receiver);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageDeleted", messageId);
+    }
+
+    return res.status(200).json({ message: "Message deleted successfully", messageId });
+
+  } catch (error) {
+    console.error("Delete message error:", error);
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+};

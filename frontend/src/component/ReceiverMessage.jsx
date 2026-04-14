@@ -45,7 +45,7 @@ const ReceiverMessage = ({ message, image }) => {
                     
                     {/* If a text message exists */}
                     {message && (
-                        <div className="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-tl-none shadow-md w-fit">
+                        <div className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-2xl rounded-tl-none shadow-md w-fit transition-colors duration-300">
                             <span className="text-md break-words">{message}</span>
                         </div>
                     )}

@@ -63,17 +63,17 @@ const Profile = () => {
       <button
         onClick={() => navigate("/")}
         className="fixed top-5 left-5 z-20 p-2 rounded-full
-        bg-white/60 backdrop-blur hover:bg-white transition"
+        bg-white/60 dark:bg-gray-800/60 backdrop-blur hover:bg-white dark:hover:bg-gray-700 transition"
       >
-        <IoMdArrowRoundBack className="w-6 h-6 text-gray-800" />
+        <IoMdArrowRoundBack className="w-6 h-6 text-gray-800 dark:text-gray-200" />
       </button>
 
       {/* Glass Card */}
       <div
         className="relative z-10 w-full max-w-[900px] rounded-3xl p-8 md:p-12
-        bg-white/50 backdrop-blur-xl border border-white/40 shadow-lg"
+        bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-white/40 dark:border-gray-700/40 shadow-lg transition-colors duration-300"
       >
-        <h2 className="text-2xl font-semibold text-gray-800 mb-10">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-10">
           Profile Settings
         </h2>
 
@@ -93,7 +93,7 @@ const Profile = () => {
                 <FaCamera className="text-white text-xl" />
               </div>
             </div>
-            <p className="text-sm text-gray-600">Change profile photo</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Change profile photo</p>
           </div>
 
           {/* Form */}
@@ -110,32 +110,32 @@ const Profile = () => {
             />
 
             <div>
-              <label className="text-sm text-gray-600">Full Name</label>
+              <label className="text-sm text-gray-600 dark:text-gray-300">Full Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full px-4 py-3 rounded-xl bg-white/70 border"
+                className="mt-1 w-full px-4 py-3 rounded-xl bg-white/70 dark:bg-gray-700/70 dark:text-gray-200 border dark:border-gray-600"
               />
             </div>
 
             <div>
-              <label className="text-sm text-gray-600">Username</label>
+              <label className="text-sm text-gray-600 dark:text-gray-300">Username</label>
               <input
                 type="text"
                 value={userData?.userName || ""}
                 readOnly
-                className="mt-1 w-full px-4 py-3 rounded-xl bg-gray-100 text-gray-500"
+                className="mt-1 w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="text-sm text-gray-600">Email</label>
+              <label className="text-sm text-gray-600 dark:text-gray-300">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full px-4 py-3 rounded-xl bg-white/70 border"
+                className="mt-1 w-full px-4 py-3 rounded-xl bg-white/70 dark:bg-gray-700/70 dark:text-gray-200 border dark:border-gray-600"
               />
             </div>
 

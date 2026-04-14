@@ -57,8 +57,8 @@ const App = () => {
             <GetOtherUsers />
 
             {!authChecked ? (
-                <div className="w-full h-[100vh] flex items-center justify-center bg-slate-100">
-                    <div className="text-gray-700 text-lg font-semibold">Loading...</div>
+                <div className="w-full h-[100vh] flex items-center justify-center bg-slate-100 dark:bg-gray-900 transition-colors duration-300">
+                    <div className="text-gray-700 dark:text-gray-200 text-lg font-semibold">Loading...</div>
                 </div>
             ) : (
                 <Routes>

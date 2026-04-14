@@ -16,8 +16,11 @@ const messageSlice = createSlice({
     clearMessages: (state) => {
       state.messages = [];
     },
+    removeMessage: (state, action) => {
+      state.messages = state.messages.filter((msg) => msg._id !== action.payload);
+    },
   },
 });
 
-export const { setMessages, addMessage, clearMessages } = messageSlice.actions;
+export const { setMessages, addMessage, clearMessages, removeMessage } = messageSlice.actions;
 export default messageSlice.reducer;
