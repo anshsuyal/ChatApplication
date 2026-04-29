@@ -17,7 +17,7 @@ const port = process.env.PORT || 8001;
 app.use(cors({
     // Make sure this matches your FRONTEND URL. 
     // If your frontend runs on Vite, it might be http://localhost:5173
-    origin: "http://localhost:8000", 
+    origin: process.env.CLIENT_URL || "http://localhost:5173", 
     credentials: true
 }));
 app.use(express.json());

@@ -301,7 +301,7 @@ const MessageArea = () => {
                         className="w-full h-full bg-transparent outline-none text-lg px-2 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
                     />
 
-                    {/* Send Button (Only shows if there's text or an image) */}
+                    {/* Send Butt-on (Only shows if there's text or an image) */}
                     {(input.trim().length > 0 || backEndImage) && (
                         <button type="submit" className="ml-2">
                             <IoSend className="text-2xl text-blue-500 cursor-pointer" />
