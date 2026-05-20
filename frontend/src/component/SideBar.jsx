@@ -27,7 +27,7 @@ const SideBar = () => {
     if (!isConfirmed) return;
 
     try {
-      await axios.get(`${serverUrl}/api/auth/logout`, {
+      await axios.post(`${serverUrl}/api/auth/logout`, {}, {
         withCredentials: true,
       });
 

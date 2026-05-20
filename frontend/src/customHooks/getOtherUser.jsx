@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setOtherUsers } from "../redux/userSlice";
@@ -16,18 +16,11 @@ export default function GetOtherUsers() {
   const { userData } = useSelector((state) => state.user);
   const myUserId = useMemo(() => getId(userData), [userData]);
 
-  // Non-UI hook state: useful for debugging, and prevents silent failures.
-  const [, setLoading] = useState(false);
-  const [, setError] = useState(null);
-
   useEffect(() => {
     const controller = new AbortController();
 
     const fetchOtherUsers = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
         if (!myUserId) {
           dispatch(setOtherUsers([]));
           return;
@@ -39,15 +32,11 @@ export default function GetOtherUsers() {
         });
 
         const list = Array.isArray(result.data) ? result.data : [];
-        // Defensive: if API ever returns the current user, filter it out.
         const filtered = list.filter((u) => getId(u) !== myUserId);
         dispatch(setOtherUsers(filtered));
       } catch (error) {
         if (controller.signal.aborted) return;
-        setError(error);
         console.log("Fetch Other Users Error:", error);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
       }
     };
 

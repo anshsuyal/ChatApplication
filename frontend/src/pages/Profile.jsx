@@ -36,6 +36,7 @@ const Profile = () => {
     try {
       const formData = new FormData();
       formData.append("name", name);
+      formData.append("email", email);
       if (backendImage) {
         formData.append("image", backendImage);
       }

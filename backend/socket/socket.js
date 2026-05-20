@@ -1,12 +1,14 @@
 import http from "http";
 import express from "express";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
+import dotenv from "dotenv";
+dotenv.config();
 let app = express();
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
   },
 });
 const userSocketMap = {};

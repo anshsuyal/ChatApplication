@@ -6,7 +6,7 @@ import io from 'socket.io-client';
 // Components & Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
+import SignUp from './pages/SignUp';
 import Profile from './pages/Profile';
 
 // Custom Hooks
@@ -79,7 +79,7 @@ const App = () => {
                     />
                     <Route 
                         path="/signup" 
-                        element={!userData ? <Signup /> : <Navigate to="/" />} 
+                        element={!userData ? <SignUp /> : <Navigate to="/" />} 
                     />
                 </Routes>
             )}

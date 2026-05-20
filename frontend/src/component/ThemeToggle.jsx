@@ -1,5 +1,5 @@
 import React from "react";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 import { BsSunFill, BsMoonFill } from "react-icons/bs";
 
 const ThemeToggle = () => {

@@ -10,37 +10,13 @@ import { FaImage } from "react-icons/fa6";
 import { IoSend } from "react-icons/io5";
 
 import { setSelectedUser } from '../redux/userSlice';
-import { setMessages } from '../redux/messageSlice'; // Assuming you exported this from messageSlice
+import { setMessages } from '../redux/messageSlice';
 import { serverUrl } from '../main';
 import SenderMessage from './SenderMessage';
 import ReceiverMessage from './ReceiverMessage';
 import dp from '../assets/3d.png';
-import { useTheme } from '../context/ThemeContext';
-
-const getId = (val) => {
-    if (!val) return null;
-    if (typeof val === "string") return val;
-    if (typeof val === "object" && typeof val._id === "string") return val._id;
-    return null;
-};
-
-const getMessageKey = (msg) => {
-    const id = getId(msg?._id);
-    if (id) return `id:${id}`;
-    const sender = getId(msg?.sender) ?? "";
-    const receiver = getId(msg?.receiver) ?? "";
-    const createdAt = msg?.createdAt ?? msg?.updatedAt ?? "";
-    const text = msg?.message ?? "";
-    const image = msg?.image ?? "";
-    return `c:${sender}|${receiver}|${createdAt}|${text}|${image}`;
-};
-
-const appendUnique = (prev, incoming) => {
-    const key = getMessageKey(incoming);
-    if (!key) return prev;
-    if (prev.some((m) => getMessageKey(m) === key)) return prev;
-    return [...prev, incoming];
-};
+import { useTheme } from '../context/useTheme';
+import { getId, getMessageKey, appendUnique } from '../utils/messageUtils';
 
 const MessageArea = () => {
     const dispatch = useDispatch();
