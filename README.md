@@ -336,31 +336,6 @@ The repo already includes `vercel.json` in both `frontend/` and `backend/`, so d
 - [ ] Add **automated tests** (unit + integration) — currently none exist
 - [ ] Add **group chat** support and **message read receipts**
 - [ ] Add **CI/CD** (lint + test on every PR)
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes with a clear message: `git commit -m "feat: add message search"`
-4. Push to your branch: `git push origin feature/your-feature`
-5. Open a Pull Request describing your changes
-
-Please keep PRs focused and include context on *why* a change was made, not just *what* changed.
-
----
-
-## 📄 License
-
-This project does not yet include a license file. It's recommended to add the **MIT License** to make the project's usage terms clear to recruiters and contributors:
-
-```
-MIT License — Copyright (c) 2026 Ansh Suyal
-```
-
 ---
 
 ## 👤 Author
@@ -369,9 +344,9 @@ MIT License — Copyright (c) 2026 Ansh Suyal
 Full Stack Developer (MERN) · Final-Year BCA Student, Graphic Era Hill University
 
 - 💻 GitHub: [@anshsuyal](https://github.com/anshsuyal)
-- 🔗 LinkedIn: *add your LinkedIn URL here*
-- 📧 Email: *add your contact email here*
-- 🌐 Portfolio: *add your portfolio URL here*
+- 🔗 LinkedIn: www.linkedin.com/in/ansh-sharma-14072005w22
+- 📧 Email: sharmaansh9386@gmail.com
+- 🌐 Portfolio: anshusuyalportfolio.vercel.app
 
 > Passionate about building real-time, production-ready web applications with the MERN stack. Open to internship and entry-level Full Stack Developer opportunities.
 
