@@ -6,7 +6,6 @@
 
 [![Stars](https://img.shields.io/github/stars/anshsuyal/ChatApplication?style=for-the-badge&color=yellow)](https://github.com/anshsuyal/ChatApplication/stargazers)
 [![Forks](https://img.shields.io/github/forks/anshsuyal/ChatApplication?style=for-the-badge&color=blue)](https://github.com/anshsuyal/ChatApplication/network/members)
-[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](#-license)
 [![Made with MERN](https://img.shields.io/badge/stack-MERN-61DAFB?style=for-the-badge&logo=react)](#-tech-stack)
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](#)
