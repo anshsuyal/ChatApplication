@@ -31,17 +31,6 @@ The backend (Node.js + Express + Socket.io) handles authentication, message pers
 
 ---
 
-## 🚀 Live Demo
-
-> ⚠️ Add your deployed links here once live (the repo includes `vercel.json` configs for both `frontend/` and `backend/`, so it's ready to deploy on Vercel):
-
-| Service | Link |
-|---------|------|
-| 🌐 Frontend | `https://your-frontend.vercel.app` |
-| ⚙️ Backend API | `https://your-backend.vercel.app` |
-
----
-
 ## ✨ Features
 
 - 💬 **Real-time one-to-one messaging** powered by Socket.io
